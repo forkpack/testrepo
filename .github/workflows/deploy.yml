@@ -34,9 +34,6 @@ jobs:
         node unzip.js
         unzip files.zip -d out
         touch ./out/.nojekyll
-        
-        mkdir BUILD
-        cp -r . BUILD
 
     # Synchronize & push BUILD directory to deployment branch
     - name: Configure Git informations
@@ -45,28 +42,13 @@ jobs:
         git config --global user.email $GITHUB_ACTOR@users.noreply.github.com
         
 
-    - name: Synchronize & push into deployment branch
+    - name: New branch & push into deployment branch
       run: |
         GIT_BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
         DEPLOY_BRANCH=$DEPLOY_BRANCH
         GIT_COMMIT=$(git rev-parse --short HEAD)
 
-
-        mkdir RELEASE
-        mv .git RELEASE/.git
-        cd RELEASE
         echo "Checking out $DEPLOY_BRANCH"
         git checkout -b $DEPLOY_BRANCH
-        git stash && git stash drop
-        (git pull --depth 1 origin $DEPLOY_BRANCH --rebase -X theirs --allow-unrelated-histories) || (echo "Deployment branch synced")
-        mv ./.git ../.git
-        cd ..
-
-        # Push build into the deployment branch
-        echo "Pushing build $GIT_COMMIT to $DEPLOY_BRANCH"
-        mv .git BUILD/out/.git
-        cd BUILD/out
-        git add -A
-        git commit -m "Automated build $GIT_COMMIT"
         git push origin $DEPLOY_BRANCH
         cd ..
