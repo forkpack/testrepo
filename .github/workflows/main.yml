@@ -1,7 +1,7 @@
 name: Build & Deploy to branch
 
 env:
-  DEPLOY_BRANCH_POSTFIX: deploy # Configure the destination branch postfix (code on "main" branch will be built and pushed into "main-POSTFIX" branch)
+  DEPLOY_BRANCH: gh-pages # Configure the destination branch
 
 on:
   push:
@@ -48,7 +48,7 @@ jobs:
     - name: Synchronize & push into deployment branch
       run: |
         GIT_BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
-        DEPLOY_BRANCH=$GIT_BRANCH-$DEPLOY_BRANCH_POSTFIX
+        DEPLOY_BRANCH=$DEPLOY_BRANCH
         GIT_COMMIT=$(git rev-parse --short HEAD)
 
 
