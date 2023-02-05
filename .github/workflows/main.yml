@@ -1,7 +1,7 @@
-name: Build & Deploy to branch
+name: Extract .zip archive
 
 env:
-  DEPLOY_BRANCH: gh-pages # Configure the destination branch
+  DEPLOY_BRANCH: main # Configure the destination branch
 
 on:
   push:
