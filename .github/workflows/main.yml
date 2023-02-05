@@ -1,46 +1,68 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: Build & Deploy to branch
+
+env:
+  DEPLOY_BRANCH_POSTFIX: deploy # Configure the destination branch postfix (code on "main" branch will be built and pushed into "main-POSTFIX" branch)
+
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
+    branches: [ main ] # Configure the branchs which you want to run this workflow
+    
 jobs:
-  Explore-GitHub-Actions:
+  build-push:
+    name: "Build & Push"
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Decode zip
-        run: node unzip.js
-      - name: Unzip
-        run: unzip files.zip -d out
-      - name: View files
-        run: cd out && ls
-      - run: touch ./out/.nojekyll
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          # Upload entire repository
-          path: 'out'
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: out
+    strategy:
+      matrix:
+        node-version: [lts/*] # Configure nodejs version
+
+    steps:
+
+    # Checkout source code
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    # Setup Nodejs
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Build application into BUILD directory
+    - name: Build application
+      run: |
+        node unzip.js
+        unzip files.zip -d out
+        touch ./out/.nojekyll
+
+    # Synchronize & push BUILD directory to deployment branch
+    - name: Configure Git informations
+      run: |
+        git config --global user.name $GITHUB_ACTOR
+        git config --global user.email $GITHUB_ACTOR@users.noreply.github.com
+        
+
+    - name: Synchronize & push into deployment branch
+      run: |
+        GIT_BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+        DEPLOY_BRANCH=$GIT_BRANCH-$DEPLOY_BRANCH_POSTFIX
+        GIT_COMMIT=$(git rev-parse --short HEAD)
+
+        mv .git out/.git
+        cd out
+        echo "Checking out $DEPLOY_BRANCH"
+        git checkout -b $DEPLOY_BRANCH
+        git stash && git stash drop
+        (git pull --depth 1 origin $DEPLOY_BRANCH --rebase -X theirs --allow-unrelated-histories) || (echo "Deployment branch synced")
+        mv ./.git ../.git
+        cd ..
+
+        # Push build into the deployment branch
+        echo "Pushing build $GIT_COMMIT to $DEPLOY_BRANCH"
+        mv .git BUILD/.git
+        cd BUILD
+        git add -A
+        git commit -m "Automated build $GIT_COMMIT"
+        git push origin $DEPLOY_BRANCH
+        cd ..
+        
