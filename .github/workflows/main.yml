@@ -1,24 +1,9 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: GitHub Deploy gh-pages
+run-name: ${{ github.actor }} running GitHub Actions 🚀
 on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pagess
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
@@ -27,21 +12,20 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          
       - name: Decode zip
         run: node unzip.js
-      - name: Unzip
+        
+      - name: Unzip decoded archive
         run: unzip files.zip -d out
+        
       - name: View files
         run: cd out && ls
+        
+      - name: Create .nojekyll file
       - run: touch ./out/.nojekyll
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          # Upload entire repository
-          path: 'out'
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: out
-
+          folder: 'out'
