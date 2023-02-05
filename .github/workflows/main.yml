@@ -34,6 +34,9 @@ jobs:
         node unzip.js
         unzip files.zip -d out
         touch ./out/.nojekyll
+        
+        mkdir BUILD
+        cp -r out BUILD
 
     # Synchronize & push BUILD directory to deployment branch
     - name: Configure Git informations
@@ -48,8 +51,10 @@ jobs:
         DEPLOY_BRANCH=$GIT_BRANCH-$DEPLOY_BRANCH_POSTFIX
         GIT_COMMIT=$(git rev-parse --short HEAD)
 
-        mv .git out/.git
-        cd out
+
+        mkdir RELEASE
+        mv .git RELEASE/.git
+        cd RELEASE
         echo "Checking out $DEPLOY_BRANCH"
         git checkout -b $DEPLOY_BRANCH
         git stash && git stash drop
@@ -65,4 +70,3 @@ jobs:
         git commit -m "Automated build $GIT_COMMIT"
         git push origin $DEPLOY_BRANCH
         cd ..
-        
