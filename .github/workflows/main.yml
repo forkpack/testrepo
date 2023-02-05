@@ -1,5 +1,6 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
 on:
   # Runs on pushes targeting the default branch
   push:
@@ -20,10 +21,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Explore-GitHub-Actions:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -33,6 +37,10 @@ jobs:
         run: unzip files.zip -d out
       - name: View files
         run: cd out && ls
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
@@ -41,4 +49,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
-
